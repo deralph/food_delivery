@@ -126,6 +126,9 @@ const Add = ({ url }) => {
               onChange={onChangeHandler}
               value={data.category}
             >
+              <option value="Noodles">Noodles</option>
+              <option value="Noodles">Rice</option>
+              <option value="Noodles">Swallow</option>
               <option value="Salad">Salad</option>
               <option value="Rolls">Rolls</option>
               <option value="Deserts">Deserts</option>
@@ -133,7 +136,6 @@ const Add = ({ url }) => {
               <option value="Cake">Cake</option>
               <option value="Pure Veg">Pure Veg</option>
               <option value="Pasta">Pasta</option>
-              <option value="Noodles">Noodles</option>
             </select>
           </div>
           <div className="add-price flex-col">
@@ -143,7 +145,7 @@ const Add = ({ url }) => {
               value={data.price}
               type="Number"
               name="price"
-              placeholder="$20"
+              placeholder="₦2000"
               required
             />
           </div>

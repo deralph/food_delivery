@@ -1,15 +1,20 @@
-.navbar{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 4%;
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4%;
 }
-.navbar .logo{
-    width: max(10%,80px);
+.navbar .logo {
+  width: max(10%, 80px);
 }
-.navbar .profile{
-    width: 40px;
+.navbar .profile {
+  width: 40px;
 }
-.login-conditon{
-    font-size: 20px;
+.login-conditon {
+  font-size: 20px;
+}
+.logohead {
+  font-weight: 700;
+  color: tomato;
+  font-size: 40px;
 }
