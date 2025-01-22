@@ -35,6 +35,7 @@ const Login = ({ url }) => {
           toast.error("You are not an admin");
         }
       } else {
+        console.log(`the error = ${response.data.message}`);
         toast.error(response.data.message);
       }
     } catch (error) {

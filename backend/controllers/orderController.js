@@ -1,48 +1,22 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 
-const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
-const paystackBaseUrl = "https://api.paystack.co";
-
 // placing user order for frontend
 const placeOrder = async (req, res) => {
-  // const frontend_url = "http://localhost:5173";
-  const frontend_url = "https://foodsdeliveryfrontend.netlify.app/";
+  console.log(req.body);
   try {
     const newOrder = new orderModel({
       userId: req.body.userId,
       items: req.body.items,
       amount: req.body.amount,
       address: req.body.address,
+      details: req.body.res,
+      payment: true,
     });
     await newOrder.save();
-    await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
-
-    const totalAmount =
-      req.body.items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      ) + 2;
-
-    const response = await fetch(`${paystackBaseUrl}/transaction/initialize`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${paystackSecretKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: req.body.email, // User email is required by Paystack
-        amount: totalAmount * 100, // Amount in kobo
-        callback_url: `${frontend_url}/verify?orderId=${newOrder._id}`,
-      }),
-    });
-
-    const data = await response.json();
-    if (data.status) {
-      res.json({ success: true, session_url: data.data.authorization_url });
-    } else {
-      res.json({ success: false, message: "Failed to initialize payment" });
-    }
+    await userModel.findByIdAndUpdate(req.body.userId, { cartData: req.body });
+    console.log("order done");
+    res.json({ success: true, message: "Payment added sucessfully" });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error" });
@@ -52,24 +26,8 @@ const placeOrder = async (req, res) => {
 const verifyOrder = async (req, res) => {
   const { orderId, reference } = req.body;
   try {
-    const response = await fetch(
-      `${paystackBaseUrl}/transaction/verify/${reference}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${paystackSecretKey}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-    if (data.status && data.data.status === "success") {
-      await orderModel.findByIdAndUpdate(orderId, { payment: true });
-      res.json({ success: true, message: "Paid" });
-    } else {
-      await orderModel.findByIdAndDelete(orderId);
-      res.json({ success: false, message: "Not Paid" });
-    }
+    await orderModel.findByIdAndUpdate(orderId, { payment: true });
+    res.json({ success: true, message: "Paid" });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error" });

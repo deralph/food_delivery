@@ -6,7 +6,9 @@ export const StoreContext = createContext(null);
 
 const StoreContextProvider = (props) => {
   const [cartItems, setCartItems] = useState({});
-  const url = "https://food-delivery-94mk.onrender.com";
+  // const url = "https://food-delivery-94mk.onrender.com";
+  const url = "http://localhost:4000";
+
   const [token, setToken] = useState("");
   const [food_list, setFoodList] = useState([]);
 
@@ -80,12 +82,22 @@ const StoreContextProvider = (props) => {
 
   const getTotalCartAmount = () => {
     let totalAmount = 0;
+
     for (const item in cartItems) {
       if (cartItems[item] > 0) {
-        let itemInfo = food_list.find((product) => product._id === item);
-        totalAmount += itemInfo.price * cartItems[item];
+        // Ensure `item` and `food_list` are valid
+        const itemInfo = food_list.find(
+          (product) => String(product._id) === String(item)
+        );
+
+        if (itemInfo) {
+          totalAmount += itemInfo.price * cartItems[item];
+        } else {
+          console.warn(`Item with ID ${item} not found in food_list.`);
+        }
       }
     }
+
     return totalAmount;
   };
 

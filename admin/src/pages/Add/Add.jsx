@@ -7,6 +7,7 @@ import { useContext } from "react";
 import { StoreContext } from "../../context/StoreContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import firebase from "firebase/app";
 
 const Add = ({ url }) => {
   const navigate = useNavigate();
@@ -29,12 +30,24 @@ const Add = ({ url }) => {
     event.preventDefault();
 
     try {
+      const uploadFile = async (uri, fileType) => {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const filename = uri.substring(uri.lastIndexOf("/") + 1);
+        const ref = firebase.storage().ref().child(`${fileType}/${filename}`);
+        const snapshot = await ref.put(blob);
+        return await snapshot.ref.getDownloadURL();
+      };
+
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("description", data.description);
       formData.append("price", Number(data.price));
       formData.append("category", data.category);
-      formData.append("image", image);
+      formData.append(
+        "image",
+        image ? await uploadFile(image, "images") : null
+      );
 
       const response = await axios.post(`${url}/api/food/add`, formData, {
         headers: { token },
