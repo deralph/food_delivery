@@ -7,7 +7,13 @@ import { useContext } from "react";
 import { StoreContext } from "../../context/StoreContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import firebase from "firebase/app";
+import { storage } from "../../components/firebase";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 
 const Add = ({ url }) => {
   const navigate = useNavigate();
@@ -30,56 +36,65 @@ const Add = ({ url }) => {
     event.preventDefault();
 
     try {
-      const uploadFile = async (uri, fileType) => {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-        const filename = uri.substring(uri.lastIndexOf("/") + 1);
-        const ref = firebase.storage().ref().child(`${fileType}/${filename}`);
-        const snapshot = await ref.put(blob);
-        return await snapshot.ref.getDownloadURL();
-      };
+      if (image) {
+        const imageRef = ref(storage, `images/${image.name}`);
+        const uploadTask = uploadBytesResumable(imageRef, image);
 
-      const formData = new FormData();
-      formData.append("name", data.name);
-      formData.append("description", data.description);
-      formData.append("price", Number(data.price));
-      formData.append("category", data.category);
-      formData.append(
-        "image",
-        image ? await uploadFile(image, "images") : null
-      );
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+            switch (snapshot.state) {
+              case "paused":
+                console.log("Upload is paused");
+                break;
+              case "running":
+                console.log("Upload is in progress");
+                break;
+            }
+          },
+          (error) => {
+            console.error(error);
+          },
+          async () => {
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              console.log("File available at", downloadURL);
+              const response = await axios.post(
+                `${url}/api/food/add`,
+                {
+                  ...data,
+                  image: downloadURL,
+                },
+                {
+                  headers: { token },
+                }
+              );
 
-      const response = await axios.post(`${url}/api/food/add`, formData, {
-        headers: { token },
-      });
-
-      if (response.data.success) {
-        setData({
-          name: "",
-          description: "",
-          price: "",
-          category: "Salad",
-        });
-        setImage(false);
-        toast.success(response.data.message);
-      } else {
-        toast.error(response.data.message);
+              if (response.data.success) {
+                console.log("image uploaded ", downloadURL);
+                setData({
+                  name: "",
+                  description: "",
+                  price: "",
+                  category: "Salad",
+                });
+                setImage(false);
+                toast.success(response.data.message);
+              } else {
+                toast.error(response.data.message);
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          }
+        );
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-
-      if (error.response) {
-        // Error response from the server
-        toast.error(
-          `Error: ${error.response.data.message || "Server error occurred."}`
-        );
-      } else if (error.request) {
-        // No response received
-        toast.error("Error: No response from server. Please try again.");
-      } else {
-        // Any other errors
-        toast.error(`Error: ${error.message}`);
-      }
+      toast.error("Error:Server error occurred.");
     }
   };
 
@@ -97,7 +112,7 @@ const Add = ({ url }) => {
           <label htmlFor="image">
             <img
               src={image ? URL.createObjectURL(image) : assets.upload_area}
-              alt=""
+              alt="product image"
             />
           </label>
           <input

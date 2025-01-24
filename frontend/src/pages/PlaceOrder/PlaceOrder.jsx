@@ -61,9 +61,8 @@ const PlaceOrder = () => {
       }
     },
     onClose: () => {
-      toast.error("Something went wrong");
-      alert("Wait! You need this oil, don't go!!!!");
-      navigate("/");
+      toast.error("Payment not made!");
+      navigate("/cart");
     },
   };
   const placeOrder = async (res) => {

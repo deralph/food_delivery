@@ -5,13 +5,14 @@ import fs from "fs";
 // add food items
 
 const addFood = async (req, res) => {
-  let image_filename = `${req.file.filename}`;
+  // let image_filename = `${req.file.filename}`;
+  console.log(req.body);
   const food = new foodModel({
     name: req.body.name,
     description: req.body.description,
     price: req.body.price,
     category: req.body.category,
-    image: image_filename,
+    image: req.body.image,
   });
   try {
     let userData = await userModel.findById(req.body.userId);
